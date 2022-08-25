@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      automountServiceAccountToken: true
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: amd64
+      containers:
+      - name: frontend
+        image: "gke.gcr.io/prometheus-engine/frontend:v0.4.3-gke.0"
+        args:
+        - "--web.listen-address=:9090"
+        - "--query.project-id=gke-core-dev-au-se1-5fd0"
+        ports:
+        - name: web
+          containerPort: 9090
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: web
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: web
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"
+spec:
+  clusterIP: None
+  selector:
+    app: frontend
+  ports:
+  - name: web
+    port: 9090

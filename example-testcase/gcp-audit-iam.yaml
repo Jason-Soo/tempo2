@@ -1,0 +1,21 @@
+# Detect any changes in a specific folder's projects and ignore inherit IAMs and report to SCC
+policies:
+  - name: iam-policy-change-detection-scc
+    resource: gcp.project
+    query:
+      - filter: "parent.id:folder_id_input parent.type:folder"
+    mode:
+      type: gcp-audit
+      #service-account: with-scc-permission@jit-deployment.iam.gserviceaccount.com
+      methods:
+        - SetIamPolicy
+    filters:
+      - type: value
+        key: "protoPayload.request.policy.bindings"
+        op: not-equal
+        value: "inherit"
+    actions:
+      - type: post-finding
+        org-id: org_id_input
+        category: HIGH_IAM_SECURITY
+        severity: HIGH

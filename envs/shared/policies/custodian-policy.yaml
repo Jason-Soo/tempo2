@@ -1,0 +1,30 @@
+vars:
+  exempted-users-for-iam: &exempted-users
+    - "user:jason.soo@insigniafinancial.com.au"
+    - "user:user5@insigniafinancial.com.au"
+policies:
+  - name: detect-new-iam-bindings
+    description: Detect new IAM bindings not in the exemption list and report to SCC
+    resource: gcp.project
+    # query:
+    #   - filter: "parent.id:239761234359 parent.type:folder"
+    mode:
+      type: gcp-audit
+      methods:
+        - setIamPolicy
+    filters:
+      - type: event
+        key: protoPayload.serviceData.policyDelta.bindingDeltas[0].action
+        op: eq
+        value: ADD
+      - type: event
+        key: protoPayload.serviceData.policyDelta.bindingDeltas[0].member
+        op: not-in
+        value: *exempted-users
+        value_type: normalize
+    # actions:
+    #   - type: post-finding
+    #     org-id: 257385444127
+    #     category: IAM_BINDING_ALERT
+    #     severity: HIGH
+        #source: "Someone added an IAM bindings that is not in the exemption list"

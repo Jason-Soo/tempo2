@@ -1,0 +1,19 @@
+#Removing roles/storage.admin in all projects
+policies:
+  - name: remove-service-account-permission
+    resource: gcp.project
+    filters:
+      - type: iam-policy
+        doc:
+          key: "bindings[*].members[]"
+          op: intersect
+          value: ["user:aventadorvip99@gmail.com"]
+    actions:
+      - type: set-iam-policy
+        remove-bindings:
+          - members:
+              - user:aventadorvip99@gmail.com
+            role: roles/storage.admin
+
+
+# SCC version pending fix, it seems to be creating a chain reaction and continueously invoking
